@@ -34,12 +34,58 @@ class Encoder(nn.Module):
                 outputs.append(x)
         return x, outputs
 
+class Decoder(nn.Module):
+    def __init__(self):
+        super(Decoder, self).__init__()
+        self.model = nn.Sequential(
+                nn.UpsamplingNearest2d(scale_factor=2),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.UpsamplingNearest2d(scale_factor=2),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(512, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.UpsamplingNearest2d(scale_factor=2),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(256, 128, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.UpsamplingNearest2d(scale_factor=2),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(128, 128, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(128, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.UpsamplingNearest2d(scale_factor=2),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(64, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
+                nn.ConvTranspose2d(64, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),)
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
 
 if __name__=="__main__":
     from config import *
     encoder = Encoder(fixed_point, style_outputs)
     x = torch.zeros(1, 3, 256, 256)
     x, outputs = encoder(x)
-    print(x.shape)
+    decoder = Decoder()
+    pic = decoder(x)
 
 
