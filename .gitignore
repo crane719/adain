@@ -4,3 +4,8 @@
 /param/*
 /train_result/*
 /test_result/*
+/train2014/*
+/dataset/*
+/train_datas/*
+/train_datas/style/*
+/train_datas/content/*

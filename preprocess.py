@@ -14,8 +14,8 @@ class Preprocess():
             pic = cv2.resize(pic, (512,512))
             pic = self.random_trim(pic, 256)
             pic = pic/256 # normalization
-            joblib.dump(pic, save_dir+"/content/"+"%d"%(i))
-            cv2.imwrite(save_dir+"/content/"+"%d.png"%(i), pic)
+            #joblib.dump(pic, save_dir+"/content/"+"%d"%(i))
+            cv2.imwrite(save_dir+"/content/"+"%d.jpg"%(i), pic)
 
         style_dirs = hoge.get_filedirs(style_dir+"/*")
         print("style images: %d"%(len(style_dirs)))
@@ -26,7 +26,8 @@ class Preprocess():
             pic = cv2.resize(pic, (512,512))
             pic = self.random_trim(pic, 256)
             pic = pic/256 # normalization
-            joblib.dump(pic, save_dir+"/style/"+"%d"%(i))
+            #joblib.dump(pic, save_dir+"/style/"+"%d"%(i))
+            cv2.imwrite(save_dir+"/style/"+"%d.jpg"%(i), pic)
 
     def random_trim(self, pic, size):
         w = random.choice(range(0, pic.shape[1]))
