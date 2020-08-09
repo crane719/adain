@@ -9,3 +9,5 @@
 /train_datas/*
 /train_datas/style/*
 /train_datas/content/*
+/venv/*
+log

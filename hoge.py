@@ -8,6 +8,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shutil
 
+def get_pics(content_dirs, style_dirs):
+    import torch
+    import cv2
+    cdatas = []
+    sdatas = []
+    for content_dir in content_dirs:
+        cdatas.append(cv2.imread(content_dir))
+    for style_dir in style_dirs:
+        sdatas.append(cv2.imread(style_dir))
+    return torch.Tensor(cdatas), torch.Tensor(sdatas)
+
 def try_gpu(obj):
     import torch
     if torch.cuda.is_available():

@@ -18,6 +18,8 @@ class Encoder(nn.Module):
         for i, param in enumerate(self.vgg19.parameters()):
             if i<=fixed_point:
                 param.requires_grad=False
+            else:
+                param.requires_grad=True
 
     def forward(self, x):
         """
@@ -39,7 +41,6 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.model = nn.Sequential(
                 nn.UpsamplingNearest2d(scale_factor=2),
-                nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
                 nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
@@ -47,8 +48,8 @@ class Decoder(nn.Module):
                 nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
                 nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.ReLU(inplace=True),
                 nn.UpsamplingNearest2d(scale_factor=2),
-                nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
                 nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
@@ -56,8 +57,8 @@ class Decoder(nn.Module):
                 nn.ConvTranspose2d(512, 512, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
                 nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(512, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-                nn.UpsamplingNearest2d(scale_factor=2),
                 nn.ReLU(inplace=True),
+                nn.UpsamplingNearest2d(scale_factor=2),
                 nn.ConvTranspose2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
                 nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
@@ -65,13 +66,13 @@ class Decoder(nn.Module):
                 nn.ConvTranspose2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
                 nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(256, 128, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-                nn.UpsamplingNearest2d(scale_factor=2),
                 nn.ReLU(inplace=True),
+                nn.UpsamplingNearest2d(scale_factor=2),
                 nn.ConvTranspose2d(128, 128, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
                 nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(128, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-                nn.UpsamplingNearest2d(scale_factor=2),
                 nn.ReLU(inplace=True),
+                nn.UpsamplingNearest2d(scale_factor=2),
                 nn.ConvTranspose2d(64, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
                 nn.ReLU(inplace=True),
                 nn.ConvTranspose2d(64, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),)

@@ -13,7 +13,6 @@ class Preprocess():
             pic = cv2.imread(content_dir)
             pic = cv2.resize(pic, (512,512))
             pic = self.random_trim(pic, 256)
-            pic = pic/256 # normalization
             #joblib.dump(pic, save_dir+"/content/"+"%d"%(i))
             cv2.imwrite(save_dir+"/content/"+"%d.jpg"%(i), pic)
 
@@ -25,7 +24,6 @@ class Preprocess():
             pic = cv2.imread(style_dir)
             pic = cv2.resize(pic, (512,512))
             pic = self.random_trim(pic, 256)
-            pic = pic/256 # normalization
             #joblib.dump(pic, save_dir+"/style/"+"%d"%(i))
             cv2.imwrite(save_dir+"/style/"+"%d.jpg"%(i), pic)
 
