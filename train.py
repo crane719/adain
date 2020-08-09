@@ -77,7 +77,7 @@ for epoch in range(epoch_num):
     # train
     #for train_step, (label, data) in enumerate(train_dl):
     for train_step, (cdir_args, sdir_args) in enumerate(zip(content_dl, style_dl), 1):
-        if train_step%10==0:
+        if train_step%100==0:
             print("     train step[%d/%d]"%(train_step, train_total_step))
         encoder.train()
         decoder.train()
@@ -103,8 +103,10 @@ for epoch in range(epoch_num):
         sdatas = hoge.try_gpu(sdatas.permute(0, 3, 1, 2).contiguous())
 
         # encode
-        crep, _ = encoder(cdatas)
+        crep, couts = encoder(cdatas)
+        crep = couts[-1]
         srep, souts = encoder(sdatas)
+        srep = souts[-1]
 
         # decode
         rep = func.adain(crep, srep)
@@ -112,7 +114,8 @@ for epoch in range(epoch_num):
         train_pic = pic
 
         # loss calc
-        reconstruct_rep, reconstruct_outs = encoder(pic)
+        _, reconstruct_outs = encoder(pic)
+        reconstruct_rep = reconstruct_outs[-1]
         lc = criterion(rep, reconstruct_rep)
 
         mu_loss = 0
@@ -127,7 +130,7 @@ for epoch in range(epoch_num):
         loss = lc + (mu_loss+sigma_loss)*style_weight
         loss.backward()
         dopt.step()
-        eopt.step()
+        #eopt.step()
         train_loss += loss.item()
         train_data_num+=cdatas.shape[0]
 
@@ -136,7 +139,7 @@ for epoch in range(epoch_num):
     style_dl = DataLoader(TensorDataset(torch.LongTensor(range(len(valid_s_dirs)))), shuffle=True, batch_size=batchsize)
     valid_total_step = len(valid_c_dirs)//batchsize
     for valid_step, (cdir_args, sdir_args) in enumerate(zip(content_dl, style_dl), 1):
-        if valid_step%10==0:
+        if valid_step%100==0:
             print("     valid step[%d/%d]"%(valid_step, valid_total_step))
         encoder.eval()
         decoder.eval()
@@ -162,16 +165,19 @@ for epoch in range(epoch_num):
         sdatas = hoge.try_gpu(sdatas.permute(0, 3, 1, 2).contiguous())
 
         # encode
-        crep, _ = encoder(cdatas)
-        srep, souts = encoder(sdatas)
+        _, couts = encoder(cdatas)
+        crep = couts[-1]
+        _, souts = encoder(sdatas)
+        srep = souts[-1]
 
         # decode
         rep = func.adain(crep, srep)
         pic = decoder(rep)
 
         # loss calc
-        reconstruct_rep, reconstruct_outs = encoder(pic)
-        lc = criterion(rep, reconstruct_rep)
+        _, reconstruct_outs = encoder(pic)
+        reconstruct_rep = reconstruct_outs[-1]
+        lc = criterion(reconstruct_rep, rep)
 
         mu_loss = 0
         sigma_loss = 0
@@ -219,6 +225,6 @@ for epoch in range(epoch_num):
     train_pic = train_pic[0].permute(1, 2, 0).contiguous().cpu().detach().numpy()*256
     cv2.imwrite("train_result/%d_s.jpg"%(epoch), sdatas)
     cv2.imwrite("train_result/%d_c.jpg"%(epoch), cdatas)
-    cv2.imwrite("train_result/%d_t.jpg"%(epoch), pic)
-    cv2.imwrite("train_result/%d_t1.jpg"%(epoch), train_pic)
+    cv2.imwrite("train_result/%d_t_valid.jpg"%(epoch), pic)
+    cv2.imwrite("train_result/%d_t_train.jpg"%(epoch), train_pic)
 
