@@ -17,6 +17,7 @@ class Encoder(nn.Module):
         # 前の方の層の重みを固定
         for i, param in enumerate(self.vgg19.parameters()):
             param.requires_grad=False
+        self.pad = nn.ReflectionPad2d((1, 1, 1, 1))
 
     def forward(self, x):
         """
@@ -31,6 +32,8 @@ class Encoder(nn.Module):
             x = layer(x)
             if i in self.style_outputs:
                 outputs.append(x)
+            if "ReLU" in str(layer):
+                x = self.pad(x)
         return x, outputs
 
 class Decoder(nn.Module):
@@ -75,9 +78,13 @@ class Decoder(nn.Module):
                 nn.Conv2d(64, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(64, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),)
+        self.pad = nn.ReflectionPad2d((1, 1, 1, 1))
 
     def forward(self, x):
-        x = self.model(x)
+        for layer in self.model:
+            x = layer(x)
+            if "ReLU" in str(layer):
+                x = self.pad(x)
         return x
 
 if __name__=="__main__":
