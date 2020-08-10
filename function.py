@@ -5,7 +5,7 @@ def adain(crep, srep):
     smu = mu(srep)
     csigma = sigma(crep)
     ssigma = sigma(srep)
-    return ssigma*(crep-cmu)/(csigma+1e-10)+smu
+    return (ssigma+1e-10)*(crep-cmu)/(csigma+1e-10)+smu
 
 def mu(vec, keep_dim=True):
     if keep_dim:
@@ -18,3 +18,6 @@ def sigma(vec, keep_dim=True):
         return torch.std(vec.view(vec.shape[0], vec.shape[1], -1), dim=2).unsqueeze(2).unsqueeze(3)
     else:
         return torch.std(vec.view(vec.shape[0], vec.shape[1], -1), dim=2)
+
+def renew_lr(lr, count, decay):
+    return lr/(1+decay*count)

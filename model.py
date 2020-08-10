@@ -14,10 +14,15 @@ class Encoder(nn.Module):
         self.vgg19 = models.vgg19(pretrained=True).features
         self.style_outputs = style_outputs
 
-        # 前の方の層の重みを固定
+        # 重みを固定
         for i, param in enumerate(self.vgg19.parameters()):
             param.requires_grad=False
         self.pad = nn.ReflectionPad2d((1, 1, 1, 1))
+
+        # convのpaddingを削除
+        for i, layer in enumerate(self.vgg19):
+            if "Conv" in str(layer):
+                self.vgg19[i].padding = (0, 0)
 
     def forward(self, x):
         """
@@ -29,11 +34,11 @@ class Encoder(nn.Module):
         """
         outputs = []
         for i, layer in enumerate(self.vgg19):
+            if "Conv" in str(layer):
+                x = self.pad(x)
             x = layer(x)
             if i in self.style_outputs:
                 outputs.append(x)
-            if "ReLU" in str(layer):
-                x = self.pad(x)
         return x, outputs
 
 class Decoder(nn.Module):
@@ -58,33 +63,33 @@ class Decoder(nn.Module):
         nn.ReLU(inplace=True),
         """
         self.model = nn.Sequential(
-                nn.Conv2d(512, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.Conv2d(512, 256, kernel_size=(3,3), stride=(1,1), padding=(0,0)),
                 nn.ReLU(inplace=True),
                 nn.UpsamplingNearest2d(scale_factor=2),
-                nn.Conv2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.Conv2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(0,0)),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.Conv2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(0,0)),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.Conv2d(256, 256, kernel_size=(3,3), stride=(1,1), padding=(0,0)),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(256, 128, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-                nn.ReLU(inplace=True),
-                nn.UpsamplingNearest2d(scale_factor=2),
-                nn.Conv2d(128, 128, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(128, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.Conv2d(256, 128, kernel_size=(3,3), stride=(1,1), padding=(0,0)),
                 nn.ReLU(inplace=True),
                 nn.UpsamplingNearest2d(scale_factor=2),
-                nn.Conv2d(64, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+                nn.Conv2d(128, 128, kernel_size=(3,3), stride=(1,1), padding=(0,0)),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(64, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),)
+                nn.Conv2d(128, 64, kernel_size=(3,3), stride=(1,1), padding=(0,0)),
+                nn.ReLU(inplace=True),
+                nn.UpsamplingNearest2d(scale_factor=2),
+                nn.Conv2d(64, 64, kernel_size=(3,3), stride=(1,1), padding=(0,0)),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(64, 3, kernel_size=(3,3), stride=(1,1), padding=(0,0)),)
         self.pad = nn.ReflectionPad2d((1, 1, 1, 1))
 
     def forward(self, x):
         for layer in self.model:
-            x = layer(x)
-            if "ReLU" in str(layer):
+            if "Conv" in str(layer):
                 x = self.pad(x)
+            x = layer(x)
         return x
 
 if __name__=="__main__":

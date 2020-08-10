@@ -1,7 +1,8 @@
-batchsize = 8
+batchsize = 3
 lr = 1e-4
 momentum = 0.9
 epoch_num = 100
+lr_decay = 5e-5
 
 train_c_dir = "train2014"
 train_s_dir = "dataset"

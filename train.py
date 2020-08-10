@@ -53,19 +53,21 @@ train_c_dirs, valid_c_dirs, train_s_dirs, valid_s_dirs =\
 encoder = hoge.try_gpu(model.Encoder(fixed_point, style_outputs))
 decoder = hoge.try_gpu(model.Decoder())
 
-eopt = optim.Adam(encoder.parameters(), lr=lr)
 dopt = optim.Adam(decoder.parameters(), lr=lr)
 
-criterion = nn.MSELoss(reduction="sum")
+criterion = nn.MSELoss()
 
 train_losses = []
 valid_losses = []
+closses = []
+slosses = []
 min_loss = 1e10
+iteration = 1
 for epoch in range(epoch_num):
     train_loss = 0
-    train_acc = []
     valid_loss = 0
-    valid_acc = []
+    closs = 0
+    sloss = 0
     print("Epoch[%d/%d]"%(epoch+1, epoch_num))
     train_data_num = 0
     valid_data_num = 0
@@ -79,10 +81,9 @@ for epoch in range(epoch_num):
     for train_step, (cdir_args, sdir_args) in enumerate(zip(content_dl, style_dl), 1):
         if train_step%100==0:
             print("     train step[%d/%d]"%(train_step, train_total_step))
-        encoder.train()
+        encoder.eval()
         decoder.train()
 
-        eopt.zero_grad()
         dopt.zero_grad()
 
         # data reading
@@ -93,8 +94,8 @@ for epoch in range(epoch_num):
         cdatas, sdatas = hoge.get_pics(cdirs, sdirs)
 
         # normalization
-        cdatas = cdatas/256
-        sdatas = sdatas/256
+        #cdatas = cdatas/256
+        #sdatas = sdatas/256
 
         # reshape
         #cdatas = hoge.try_gpu(cdatas.view(-1, 3, 256, 256))
@@ -130,9 +131,22 @@ for epoch in range(epoch_num):
         loss = lc + (mu_loss+sigma_loss)*style_weight
         loss.backward()
         dopt.step()
-        #eopt.step()
         train_loss += loss.item()
+        closs+=lc.item()
+        sloss+=(mu_loss+sigma_loss).item()
         train_data_num+=cdatas.shape[0]
+
+        # lrの更新
+        renew_lr = func.renew_lr(lr, iteration, lr_decay)
+        iteration+=1
+        for param_group in dopt.param_groups:
+            param_group["lr"] = renew_lr
+
+        # 重みを吐き出す
+        if loss<min_loss:
+            min_loss = loss
+            torch.save(encoder.state_dict(), "param/encoder_weight")
+            torch.save(decoder.state_dict(), "param/decoder_weight")
 
     # valid
     content_dl = DataLoader(TensorDataset(torch.LongTensor(range(len(valid_c_dirs)))), shuffle=True, batch_size=batchsize)
@@ -144,7 +158,6 @@ for epoch in range(epoch_num):
         encoder.eval()
         decoder.eval()
 
-        eopt.zero_grad()
         dopt.zero_grad()
 
         # data reading
@@ -155,8 +168,8 @@ for epoch in range(epoch_num):
         cdatas, sdatas = hoge.get_pics(cdirs, sdirs)
 
         # normalization
-        cdatas = cdatas/256
-        sdatas = sdatas/256
+        #cdatas = cdatas/256
+        #sdatas = sdatas/256
 
         # reshape
         #cdatas = hoge.try_gpu(cdatas.view(-1, 3, 256, 256))
@@ -192,17 +205,16 @@ for epoch in range(epoch_num):
         valid_loss += loss.item()
         valid_data_num+=cdatas.shape[0]
 
-    # 重みの吐き出し
-    if valid_loss<min_loss:
-        min_loss = valid_loss
-        torch.save(encoder.state_dict(), "param/encoder_weight")
-        torch.save(decoder.state_dict(), "param/decoder_weight")
 
     # 諸々average
     train_loss/=train_data_num
     valid_loss/=valid_data_num
+    closs/=train_data_num
+    sloss/=train_data_num
     train_losses.append(train_loss)
     valid_losses.append(valid_loss)
+    closses.append(closs)
+    slosses.append(sloss)
     # 整形, 可視化
     losses = {
         "train": train_losses,
@@ -210,6 +222,8 @@ for epoch in range(epoch_num):
         }
     x = list(range(len(train_losses)))
     io.time_draw(x, losses, "train_result/loss.png")
+    io.time_draw(x, {"train": slosses}, "train_result/sloss.png")
+    io.time_draw(x, {"train": closses}, "train_result/closs.png")
 
     print("----------------------------")
     print(" loss:")
@@ -219,10 +233,16 @@ for epoch in range(epoch_num):
     print("     time: %lf"%(time.time()-start_time))
     print("----------------------------")
 
+    """
     sdatas = sdatas[0].permute(1, 2, 0).contiguous().cpu().detach().numpy()*256
     cdatas = cdatas[0].permute(1, 2, 0).contiguous().cpu().detach().numpy()*256
     pic = pic[0].permute(1, 2, 0).contiguous().cpu().detach().numpy()*256
     train_pic = train_pic[0].permute(1, 2, 0).contiguous().cpu().detach().numpy()*256
+    """
+    sdatas = sdatas[0].permute(1, 2, 0).contiguous().cpu().detach().numpy()
+    cdatas = cdatas[0].permute(1, 2, 0).contiguous().cpu().detach().numpy()
+    pic = pic[0].permute(1, 2, 0).contiguous().cpu().detach().numpy()
+    train_pic = train_pic[0].permute(1, 2, 0).contiguous().cpu().detach().numpy()
     cv2.imwrite("train_result/%d_s.jpg"%(epoch), sdatas)
     cv2.imwrite("train_result/%d_c.jpg"%(epoch), cdatas)
     cv2.imwrite("train_result/%d_t_valid.jpg"%(epoch), pic)
