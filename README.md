@@ -16,9 +16,9 @@ python train.py [--preprocess]
 
 ## eval
 
-- configのtrain_c_dirにコンテンツ訓練データのdirを記述
-- configのtrain_s_dirにスタイル訓練データのdirを記述
-- eval_resultに結果を出力
+- configのtest_c_dirにコンテンツテストデータのdirを記述
+- configのtest_s_dirにスタイルテストデータのdirを記述
+- test_resultに結果を出力
 
 ```
 python eval.py

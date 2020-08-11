@@ -145,8 +145,8 @@ for epoch in range(epoch_num):
         # 重みを吐き出す
         if loss<min_loss:
             min_loss = loss
-            torch.save(encoder.state_dict(), "param/encoder_weight")
-            torch.save(decoder.state_dict(), "param/decoder_weight")
+            torch.save(encoder.state_dict(), eweight_dir)
+            torch.save(decoder.state_dict(), dweight_dir)
 
     # valid
     content_dl = DataLoader(TensorDataset(torch.LongTensor(range(len(valid_c_dirs)))), shuffle=True, batch_size=batchsize)
